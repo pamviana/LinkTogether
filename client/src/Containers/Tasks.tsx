@@ -3,7 +3,7 @@ import { Box, Typography, Fab, Drawer, Button } from "@mui/material";
 import { TaskCard } from "../Components/TaskCard";
 import AddIcon from "@mui/icons-material/Add";
 import { TaskForm } from "../Components/TaskForm";
-import { getTasksByAssignee, completeTask } from "../api/tasks";
+import { getTasksByAssignee, completeTask, deleteTask } from "../api/tasks";
 import type { Task } from "../api/tasks";
 import { useDateStore } from "../store/useDateStore";
 import { DateNavigator } from "../Components/DateNavigator";
@@ -22,26 +22,36 @@ export default function Tasks() {
   const [completedTasks, setCompletedTasks] = React.useState<Task[]>([]);
   const { selectedDate } = useDateStore();
 
+  const fetchTasks = async () => {
+    try {
+      const tasks = await getTasksByAssignee(
+        user.name,
+        selectedDate.toFormat("MM/dd/yyyy") ??
+          DateTime.local().toFormat("MM/dd/yyyy")
+      );
+      const incomplete = tasks?.filter((task) => !task.completed);
+      setIncompleteTasks(incomplete);
+
+      const completed = tasks?.filter((task) => task.completed);
+      setCompletedTasks(completed);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setIncompleteTasks([]);
+      setCompletedTasks([]);
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    try {
+      await deleteTask(taskId);
+      setOpenTaskDrawer(false);
+      fetchTasks();
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+    }
+  };
+
   React.useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const tasks = await getTasksByAssignee(
-          user.name,
-          selectedDate.toFormat("MM/dd/yyyy") ??
-            DateTime.local().toFormat("MM/dd/yyyy")
-        );
-        const incomplete = tasks?.filter((task) => !task.completed);
-        setIncompleteTasks(incomplete);
-
-        const completed = tasks?.filter((task) => task.completed);
-        setCompletedTasks(completed);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-        setIncompleteTasks([]);
-        setCompletedTasks([]);
-      }
-    };
-
     fetchTasks();
   }, [user, selectedDate]);
 
@@ -169,7 +179,7 @@ export default function Tasks() {
       >
         <Box sx={{ margin: "30px" }}>
           <Button
-            onClick={() => console.log("task deleted ", taskId)}
+            onClick={() => handleDeleteTask()}
             sx={{ display: "flex", alignItems: "center", gap: "10px" }}
           >
             <DeleteIcon />

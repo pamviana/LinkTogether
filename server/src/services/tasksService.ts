@@ -23,11 +23,9 @@ export interface Task {
 export const createTask = async (task: Task): Promise<string[]> => {
   const tasks = getTasksToCreate(task);
   const taskPromises = tasks.map((task) => {
-    return db
-      .collection("tasks")
-      .add({
-        ...task,
-      });
+    return db.collection("tasks").add({
+      ...task,
+    });
   });
   const taskRefs = await Promise.all(taskPromises);
   const taskIds = taskRefs.map((ref) => ref.id);
@@ -36,7 +34,9 @@ export const createTask = async (task: Task): Promise<string[]> => {
 
 const getTasksToCreate = (task: Task): Task[] => {
   if (task.recurrence === "None") {
-    return [{ ...task, startDate: null, endDate: null }];
+    const dueDate =
+      typeof task.dueDate === "string" ? new Date(task.dueDate) : task.dueDate;
+    return [{ ...task, startDate: null, endDate: null, dueDate }];
   } else {
     if (!task.startDate || !task.endDate) {
       throw new Error("Start and end dates are required for recurring tasks");
@@ -94,4 +94,9 @@ export const completeTask = async (
     lastModified: new Date(),
     completedBy: user,
   });
+};
+
+export const deleteTask = async (taskId: string): Promise<void> => {
+  const taskRef = db.collection("tasks").doc(taskId);
+  await taskRef.delete();
 };

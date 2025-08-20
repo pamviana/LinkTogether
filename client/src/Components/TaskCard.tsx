@@ -77,6 +77,7 @@ export function TaskCard({
         <Box sx={{ display: "flex", flexDirection: "column" }}>
           <Typography
             variant="body1"
+            fontWeight="bold"
             sx={{ textDecoration: completed ? "line-through" : "none" }}
           >
             {title}

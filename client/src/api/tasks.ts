@@ -73,3 +73,13 @@ export const getTasksByAssignee = async (
   const data = await response.json();
   return data.tasks as Task[];
 };
+
+export const deleteTask = async (taskId: string): Promise<void> => {
+  const response = await fetch(`/api/tasks/${taskId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete task");
+  }
+};
